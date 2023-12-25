@@ -35,13 +35,13 @@ void *reader(void *arg){
     readcount--;
     pthread_mutex_unlock(&mutex);
     // Nếu không có pthread_mutex_lock and unlock thì sẽ dẫn đến hiện tượng race condition và bất đồng bộ trong việc truy cập biến readcount
+    printf("\n Reader %ld leaves critical section!", num);
+
 
     if(readcount == 0){
         pthread_mutex_unlock(&wr);
         printf("\nWRITER CAN EDIT FILE");
     }
-
-    printf("\n Reader %ld leaves critical section!", num);
 
 }
 
