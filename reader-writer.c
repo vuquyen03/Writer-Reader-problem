@@ -12,16 +12,19 @@ int readcount = 0;
 void *reader(void *arg){
     long int num;
     num = (long int) arg;
-
+    printf("\n Reader %ld requires to access the shared resource", num);
     // Khi một luồng hoàn thành thao tác đọc và ghi trên biến count, nó sẽ gọi pthread_mutex_unlock(&mutex) để giải phóng mutex và cho phép các luồng khác có thể tiếp tục truy cập vào biến count.
     pthread_mutex_lock(&mutex);
     readcount++;
-    pthread_mutex_unlock(&mutex);
 
     if(readcount == 1){
-        printf("\nTIME FOR READING!!!");
         pthread_mutex_lock(&wr);
+        printf("\nTIME FOR READING!!!");
     }
+
+    pthread_mutex_unlock(&mutex);
+
+
     printf("\n Reader %ld is in critical section!", num);
     printf("\n Reader %ld is reading data as %d", num, data);
     
@@ -30,13 +33,13 @@ void *reader(void *arg){
     int timesleep = rand()%10;
     sleep(timesleep);
 
+    printf("\n Reader %ld leaves critical section!", num);
+
     pthread_mutex_lock(&mutex);
     // printf("\n Count %d", readcount);
     readcount--;
     pthread_mutex_unlock(&mutex);
     // Nếu không có pthread_mutex_lock and unlock thì sẽ dẫn đến hiện tượng race condition và bất đồng bộ trong việc truy cập biến readcount
-    printf("\n Reader %ld leaves critical section!", num);
-
 
     if(readcount == 0){
         pthread_mutex_unlock(&wr);
@@ -79,12 +82,13 @@ int main(){
     scanf("%d %d", &number_of_reader, &number_of_writer);
 
     //Create reader and writer threads
-    for(i=0; i<number_of_reader; i++){
-        pthread_create(&r[i], NULL, reader, (void *)i);
-    }
 
     for (j=0; j<number_of_writer; j++){
         pthread_create(&w[j], NULL, writer, (void *)j);
+    }
+
+    for(i=0; i<number_of_reader; i++){
+        pthread_create(&r[i], NULL, reader, (void *)i);
     }
 
     //Join threads
