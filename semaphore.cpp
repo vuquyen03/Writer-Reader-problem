@@ -136,7 +136,7 @@ void wait(semaphore *sem, int id)
 
     --sem->value;
 
-    if (sem->value < 0 && sem == rw_mutex)
+    if (sem->value < 0)
     {
         sem->blocked_queue->push(id);
         std::cout << "Process " << id << " is added to the block queue." << std::endl;
@@ -163,16 +163,17 @@ void classicalReader(int processId)
     //  the next section executes if the process with processId is not blocked
 
     ++read_count;
-    // std::cout << "Number of readers: " << read_count << std::endl;
+
     if (read_count == 1)
     { // this implies that the first reader tries to access
         wait(rw_mutex, processId);
-        std::cout << "Time for reading!!!" << std::endl;
+        std::cout << "TIME FOR READING!!!" << std::endl;
         //  this will wait until the process is activated
         //  due to freeing of the rw_mutex by a signal from writer
     }
 
     signal(read_mutex); // this call happens here, as unless a reader enters, others shouldn't modify the read_count
+
 
     // ***** CRITICAL SECTION ***** //
     std::cout << "Reader " << processId << " is in the critical section." << std::endl;
@@ -181,7 +182,7 @@ void classicalReader(int processId)
     // Simulate some work being done in the critical section
     srand(time(NULL));
     int timesleep = rand() % 10;
-    usleep(timesleep * 10000);
+    usleep(timesleep * 100000);
 
     std::cout << "Reader " << processId << " exited the critical section." << std::endl;
     //  this can be accessed by readers directly if read_count != 1 (they are not the first reader)
@@ -194,7 +195,7 @@ void classicalReader(int processId)
     if (read_count == 0)
     {
         signal(rw_mutex);
-        std::cout << "Writer can edit file" << std::endl;
+        std::cout << "WRITER CAN EDIT FILE" << std::endl;
         // the last reader frees the rw_mutex
     }
 }
@@ -215,7 +216,7 @@ void classicalWriter(int processId)
     // Simulate some work being done in the critical section
     srand(time(NULL));
     int timesleep = rand() % 10;
-    usleep(timesleep * 10000);
+    usleep(timesleep * 100000);
 
     std::cout << "Writer " << processId << " exited the critical section." << std::endl;
 
@@ -237,14 +238,14 @@ int main()
 
     pthread_t readerThread[MAX_SIZE], writerThread[MAX_SIZE];
 
-    for (int i = 0; i < nor; i++)
-    {
-        pthread_create(&readerThread[i], NULL, (void *(*)(void *))classicalReader, reinterpret_cast<void *>(static_cast<intptr_t>(++processID)));
-    }
-
     for (int j = 0; j < now; j++)
     {
         pthread_create(&writerThread[j], NULL, (void *(*)(void *))classicalWriter, reinterpret_cast<void *>(static_cast<intptr_t>(++processID)));
+    }
+    
+    for (int i = 0; i < nor; i++)
+    {
+        pthread_create(&readerThread[i], NULL, (void *(*)(void *))classicalReader, reinterpret_cast<void *>(static_cast<intptr_t>(++processID)));
     }
 
     for (int i = 0; i < nor; i++)
